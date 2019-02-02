@@ -46,7 +46,7 @@ struct GRID
  *   otherwise.
  *
  **/
-bool validate_input(int,int);
+bool validate_input(int, int);
 
 /*
  * Setup GRID for current processor's context.

@@ -1,21 +1,22 @@
 #include "fox.hpp"
+#include "mem.hpp"
 
 #include <mpi.h>
-#include <cstdlib>
 #include <iostream>
 
 #define ROOT 0
-#define SQR(n) ((n)*(n))                    // square of number
 #define PROJ(row,col,sz) ((row)*(sz)+(col)) // 2d array coord -> 1d array coord
 
 using namespace std;
 
 int main(int argc, char **argv)
 {
-    GRID grid;
     int sz_mx, my_rank, nproc;
     double *mx, *a, *b, *c;
     bool err;
+    GRID grid;
+
+    mx = a = b = c = nullptr;
     
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -30,7 +31,7 @@ int main(int argc, char **argv)
 	if(!err)
 	{
 	    // basic input validated, alloc & read matrix
-	    mx = (double*) malloc(SQR(sz_mx) * sizeof(double));
+	    matrix_alloc(&mx, sz_mx);
 	    
 	    for(int i=0; i!=sz_mx; ++i)
 		for(int j=0; j!=sz_mx; ++j)
@@ -52,16 +53,17 @@ int main(int argc, char **argv)
     
     // alloc local matrices
     int mx_part = sz_mx/grid.q;
-    
-    a = (double*) malloc(SQR(mx_part) * sizeof(double));
-    b = (double*) malloc(SQR(mx_part) * sizeof(double));
-    c = (double*) malloc(SQR(mx_part) * sizeof(double));
+
+    matrix_alloc(&a, mx_part);
+    matrix_alloc(&b, mx_part);
+    matrix_alloc(&c, mx_part);
     
     // share work
     if(my_rank == ROOT)
     {
 	int dest = 0;
-	double *tmp = (double*) malloc(SQR(mx_part) * sizeof(double));
+	double *tmp;
+	matrix_alloc(&tmp, mx_part);
 	
         for(int r=0; r!=grid.q; ++r)
 	    for(int c=0; c!=grid.q; ++c)
@@ -72,11 +74,26 @@ int main(int argc, char **argv)
 
 		MPI_Send(tmp, SQR(mx_part), MPI_DOUBLE, dest++, 0, MPI_COMM_WORLD);
 	    }
+
+	matrix_free(&tmp);
     }
 
     // receive work
-    MPI_Recv(b, SQR(mx_part), MPI_DOUBLE, ROOT, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(a, SQR(mx_part), MPI_DOUBLE, ROOT, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
+    // APSP: repeated squaring + fox
+    int m = 1;
+
+    while(m < sz_mx-1)
+    {
+	matrix_copy(&b, &a, mx_part);
+	m *= 2;
+    }
+
+    // free allocated memory
+    matrix_free(&a);
+    matrix_free(&b);
+    matrix_free(&c);
     
     MPI_Finalize();
     return 0;

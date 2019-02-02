@@ -1,6 +1,8 @@
 /* mem.hpp
  *
- * Functions related to memory management.
+ * Functions related to matrix memory management.
+ * Matrices are assumed to be 1-dimensional,
+ * being then treated as arrays. 
  *
  **/
 
@@ -8,7 +10,7 @@
 #define MEM_H
 
 /*
- * Allocate memory for a 1D matrix of
+ * Allocate memory for a matrix of
  * size*size doubles.
  *
  * Input:
@@ -19,8 +21,8 @@
 void matrix_alloc(double**, int);
 
 /*
- * Copies the values of a source 1D matrix 
- * to a destination 1D matrix.
+ * Copies the values of a source matrix 
+ * to a destination matrix.
  *
  * Input:
  *   dest   - destination matrix
@@ -28,7 +30,7 @@ void matrix_alloc(double**, int);
  *   size   - order of matrices
  *
  **/
-void matrix_copy(double**, double**, int);
+void matrix_copy(double**, double*, int);
 
 /*
  * Free matrix memory previously allocated
@@ -37,7 +39,18 @@ void matrix_copy(double**, double**, int);
  * Input:
  *   mx - target matrix to free
  *
- */
+ **/
 void matrix_free(double**);
+
+/*
+ * Fill matrix with provided value.
+ *
+ * Input:
+ *   mx   - target matrix to fill
+ *   size - matrix order
+ *   val  - value to fill with
+ *
+ **/
+void matrix_fill(double**, int, double);
 
 #endif

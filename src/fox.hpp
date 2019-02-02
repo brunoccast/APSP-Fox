@@ -1,10 +1,8 @@
 /* fox.hpp
  *
- * Functions related to fox algorithm.
- *
- * Both GRID and setup_grid() are based on
- * the same constructs described by Peter
- * S. Pacheco in "A User's Guide to MPI.".
+ * Functions and constructs related to fox algorithm,
+ * based on the corresponding versions described by
+ * Peter S. Pacheco in "A User's Guide to MPI".
  *
  **/
 
@@ -57,5 +55,18 @@ bool validate_input(int, int);
  *
  **/
 void setup_grid(int, GRID*);
+
+/*
+ * Implementation of Fox
+ *
+ * Input:
+ *   n - input matrix order
+ *   g - processor's grid
+ *   a - processor's local matrix A
+ *   b - processor's local matrix B
+ *   c - processor's local matrix C
+ *
+ **/
+void fox_algorithm(int, const GRID&, double**, double**, double**);
 
 #endif // FOX_H

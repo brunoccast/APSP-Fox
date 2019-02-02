@@ -36,14 +36,14 @@ TEST_CASE( "Copy works correctly" )
 
     SECTION( "Copying to null matrices changes nothing" )
     {
-	matrix_copy(&mx2, &mx1, 2);
+	matrix_copy(&mx2, mx1, 2);
 	REQUIRE(mx2 == nullptr);
     }
 
     SECTION( "Copy works for allocated matrices" )
     {
 	matrix_alloc(&mx2, 2);
-	matrix_copy(&mx2, &mx1, 2);
+	matrix_copy(&mx2, mx1, 2);
 
 	for(int i=0; i!=4; ++i)
 	    REQUIRE(mx1[i] == mx2[i]);
@@ -62,6 +62,19 @@ TEST_CASE( "Free works correctly" )
 
     matrix_free(&mx);
     REQUIRE( mx == nullptr );
+}
+
+TEST_CASE( "Fill works correctly" )
+{
+    double *mx = nullptr;
+
+    matrix_alloc(&mx, 2);
+    matrix_fill(&mx, 2, 10);
+
+    for(int i=0; i!=4; ++i)
+	REQUIRE( mx[i] == 10 );
+
+    matrix_free(&mx);
 }
 
 void populate(double **mx, int size)

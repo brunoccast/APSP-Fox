@@ -1,11 +1,11 @@
 #include "fox.hpp"
 #include "mem.hpp"
+#include "util.hpp"
 
 #include <mpi.h>
 #include <iostream>
 
 #define ROOT 0
-#define PROJ(row,col,sz) ((row)*(sz)+(col)) // 2d array coord -> 1d array coord
 
 using namespace std;
 
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 	    
 	    for(int i=0; i!=sz_mx; ++i)
 		for(int j=0; j!=sz_mx; ++j)
-		    cin >> mx[ PROJ(i,j,sz_mx) ];
+		    cin >> mx[ proj(i,j,sz_mx) ];
 	}
     }
 
@@ -70,23 +70,23 @@ int main(int argc, char **argv)
 	    {
 		for(int i=0; i!=mx_part; ++i)
 		    for(int j=0; j!=mx_part; ++j)
-			tmp[ PROJ(i,j,mx_part) ] = mx[ PROJ((r*mx_part)+i,(c*mx_part)+j,sz_mx) ];
+			tmp[ proj(i,j,mx_part) ] = mx[ proj((r*mx_part)+i,(c*mx_part)+j,sz_mx) ];
 
-		MPI_Send(tmp, SQR(mx_part), MPI_DOUBLE, dest++, 0, MPI_COMM_WORLD);
+		MPI_Send(tmp, sqr(mx_part), MPI_DOUBLE, dest++, 0, MPI_COMM_WORLD);
 	    }
 
 	matrix_free(&tmp);
     }
 
     // receive work
-    MPI_Recv(a, SQR(mx_part), MPI_DOUBLE, ROOT, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(a, sqr(mx_part), MPI_DOUBLE, ROOT, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
     // APSP: repeated squaring + fox
     int m = 1;
-
     while(m < sz_mx-1)
     {
-	matrix_copy(&b, &a, mx_part);
+	matrix_copy(&b, a, mx_part);
+	fox_algorithm(sz_mx, grid, &a, &b, &c);
 	m *= 2;
     }
 

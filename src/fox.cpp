@@ -1,7 +1,12 @@
 #include "fox.hpp"
+#include "mem.hpp"
+#include "util.hpp"
 
-#include <math.h>
+#include <cmath>
+#include <cfloat>
 #include <iostream>
+
+#define INF DBL_MAX
 
 struct Grid;
 
@@ -58,4 +63,41 @@ void setup_grid(int p, GRID* g)
     dimensions[0] = 1;
     dimensions[1] = 0;
     MPI_Cart_sub(g->comm, dimensions, &(g->col_comm));
+}
+
+void fox_algorithm(int n, const GRID& g, double** a, double** b, double** c)
+{
+    int mx_part, source, dest, bcast_root;
+    double *tmp_a = nullptr;
+    
+    mx_part = n/g.q;
+    matrix_fill(c, mx_part, INF);
+
+    // addresses for circular shift of B
+    source = (g.my_row + 1) % g.q;
+    dest   = (g.my_row + g.q - 1) % g.q;
+
+    // storage for the broadcast of A
+    matrix_alloc(&tmp_a, mx_part);
+
+    for(int step=0; step<g.q; ++step)
+    {
+	bcast_root = (g.my_row + step) % g.q;
+
+	if(bcast_root == g.my_col)
+	{
+	    MPI_Bcast(*a, sqr(mx_part), MPI_DOUBLE, bcast_root, g.row_comm);
+	    special_matrix_multiply(*a, *b, c, mx_part);
+	}
+	else
+	{
+	    MPI_Bcast(tmp_a, sqr(mx_part), MPI_DOUBLE, bcast_root, g.row_comm);
+	    special_matrix_multiply(tmp_a, *b, c, mx_part);
+	}
+
+	MPI_Send(*b, sqr(mx_part), MPI_DOUBLE, dest, 0, g.col_comm);
+	MPI_Recv(*b, sqr(mx_part), MPI_DOUBLE, source, MPI_ANY_TAG, g.col_comm, MPI_STATUS_IGNORE);
+    }
+
+    matrix_free(&tmp_a);
 }

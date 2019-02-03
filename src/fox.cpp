@@ -3,10 +3,7 @@
 #include "util.hpp"
 
 #include <cmath>
-#include <cfloat>
 #include <iostream>
-
-#define INF DBL_MAX
 
 struct Grid;
 
@@ -71,7 +68,6 @@ void fox_algorithm(int n, const GRID& g, double** a, double** b, double** c)
     double *tmp_a = nullptr;
     
     mx_part = n/g.q;
-    matrix_fill(c, mx_part, INF);
 
     // addresses for circular shift of B
     source = (g.my_row + 1) % g.q;

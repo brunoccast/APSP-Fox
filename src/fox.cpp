@@ -91,8 +91,7 @@ void fox_algorithm(int n, const GRID& g, double** a, double** b, double** c)
 	    special_matrix_multiply(tmp_a, *b, c, mx_part);
 	}
 
-	MPI_Send(*b, sqr(mx_part), MPI_DOUBLE, dest, 0, g.col_comm);
-	MPI_Recv(*b, sqr(mx_part), MPI_DOUBLE, source, MPI_ANY_TAG, g.col_comm, MPI_STATUS_IGNORE);
+	MPI_Sendrecv_replace(*b, sqr(mx_part), MPI_DOUBLE, dest, 0, source, MPI_ANY_TAG, g.col_comm, MPI_STATUS_IGNORE);
     }
 
     matrix_free(&tmp_a);
